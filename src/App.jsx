@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+import heroImage from './assets/hero.png'
+import { supabase } from './lib/supabaseClient'
 
 const tracks = [
   'Computational Engineering & HPC',
@@ -62,13 +64,21 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [countdown, setCountdown] = useState({ days: '000', hours: '00', minutes: '00', seconds: '00' })
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    organization: '',
-    category: 'Student / Research Scholar',
-    notes: '',
+    title: '',
+    abstract: '',
+    author_names: '',
+    author_email: '',
+    affiliation: '',
+    track: tracks[0],
+    pdfFile: null,
   })
-  const [submitted, setSubmitted] = useState(false)
+  const [submissionState, setSubmissionState] = useState({
+    submitted: false,
+    submissionId: '',
+    success: false,
+    error: '',
+    busy: false,
+  })
 
   useEffect(() => {
     const targetTime = new Date('2026-10-02T00:00:00+05:30').getTime()
@@ -120,21 +130,90 @@ function App() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (event) => {
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0] ?? null
+    setFormData((prev) => ({ ...prev, pdfFile: file }))
+  }
+
+  const validateSubmission = () => {
+    if (!formData.title.trim()) return 'Please enter the paper title.'
+    if (!formData.abstract.trim()) return 'Please enter the abstract.'
+    if (!formData.author_names.trim()) return 'Please enter the author names.'
+    if (!formData.author_email.trim()) return 'Please enter an author email.'
+    if (!formData.affiliation.trim()) return 'Please enter the college or affiliation.'
+    if (!formData.pdfFile) return 'Please upload the paper PDF.'
+    if (formData.pdfFile.type !== 'application/pdf') return 'Only PDF files are allowed.'
+    if (formData.pdfFile.size > 10 * 1024 * 1024) return 'PDF file size must be 10MB or less.'
+    return ''
+  }
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    setSubmitted(true)
+    setSubmissionState((prev) => ({ ...prev, error: '', busy: true }))
+
+    const validationError = validateSubmission()
+    if (validationError) {
+      setSubmissionState({ submitted: false, submissionId: '', success: false, error: validationError, busy: false })
+      return
+    }
+
+    try {
+      const filePath = `${Date.now()}-${formData.pdfFile.name.replace(/\s+/g, '_')}`
+      const { error: uploadError } = await supabase.storage.from('papers').upload(filePath, formData.pdfFile)
+
+      if (uploadError) {
+        console.error('Supabase upload error', uploadError)
+        const message = uploadError.message || 'Upload failed. Confirm your Supabase Storage bucket "papers" exists.'
+        throw new Error(message)
+      }
+
+      const { data: urlData, error: urlError } = supabase.storage.from('papers').getPublicUrl(filePath)
+      if (urlError) {
+        console.error('Supabase getPublicUrl error', urlError)
+        const message = urlError.message || 'Failed to get the public URL. Confirm the "papers" storage bucket is configured.'
+        throw new Error(message)
+      }
+
+      const pdfUrl = urlData?.publicUrl
+      if (!pdfUrl) {
+        throw new Error('Could not get uploaded PDF URL. Ensure the "papers" bucket exists and is public.')
+      }
+
+const submissionId = crypto.randomUUID()
+
+const { error: insertError } = await supabase
+  .from('submissions')
+  .insert([
+    {
+      id: submissionId,
+      title: formData.title,
+      abstract: formData.abstract,
+      author_names: formData.author_names,
+      author_email: formData.author_email,
+      affiliation: formData.affiliation,
+      track: formData.track,
+      pdf_url: pdfUrl,
+    },
+  ])
+
+if (insertError) {
+  console.error('Supabase insert error', insertError)
+  throw new Error(insertError.message || 'Failed to save submission.')
+}
+
+setSubmissionState({ submitted: true, submissionId, success: true, error: '', busy: false })
+      setFormData({ title: '', abstract: '', author_names: '', author_email: '', affiliation: '', track: tracks[0], pdfFile: null })
+    } catch (submissionError) {
+      console.error('Paper submission error', submissionError)
+      const message = submissionError?.message || String(submissionError)
+      setSubmissionState({ submitted: false, submissionId: '', success: false, error: message, busy: false })
+    }
   }
 
   const closeModal = () => {
     setIsModalOpen(false)
-    setSubmitted(false)
-    setFormData({
-      name: '',
-      email: '',
-      organization: '',
-      category: 'Student / Research Scholar',
-      notes: '',
-    })
+    setSubmissionState({ submitted: false, submissionId: '', success: false, error: '', busy: false })
+    setFormData({ title: '', abstract: '', author_names: '', author_email: '', affiliation: '', track: tracks[0], pdfFile: null })
   }
 
   return (
@@ -156,7 +235,7 @@ function App() {
             <a href="#committee" onClick={() => setIsMenuOpen(false)}>Committee</a>
             <a href="#contact" onClick={() => setIsMenuOpen(false)}>Contact</a>
             <button type="button" className="nav-cta" onClick={() => setIsModalOpen(true)}>
-              Register →
+              Submit Paper →
             </button>
           </nav>
           <button type="button" className="burger" onClick={() => setIsMenuOpen((open) => !open)} aria-label="Toggle menu">
@@ -186,6 +265,12 @@ function App() {
             <p className="hero-sub">
               The flagship international symposium of the ISRO–TKMCE Centre of Excellence, bringing together ISRO scientists, researchers, industry and students.
             </p>
+
+            <div className="hero-visual" aria-hidden="true">
+              <div className="hero-figure">
+                <img src={heroImage} alt="" />
+              </div>
+            </div>
 
             <div className="hero-meta">
               <div className="hm">
@@ -329,7 +414,7 @@ function App() {
                   <li><b>Best Paper & Best Presentation</b> awards for outstanding contributions</li>
                 </ul>
                 <div className="cta-row" style={{ marginTop: '32px' }}>
-                  <button type="button" className="btn primary" onClick={() => setIsModalOpen(true)}>Submit an Abstract →</button>
+                  <button type="button" className="btn primary" onClick={() => setIsModalOpen(true)}>Submit Paper →</button>
                 </div>
               </div>
               <div className="card reveal">
@@ -615,51 +700,96 @@ function App() {
           <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <div>
-                <p className="eyebrow">Registration</p>
-                <h3>Reserve your seat for ZYNEXA 2026</h3>
+                <p className="eyebrow">Paper Submission</p>
+                <h3>Submit your conference paper</h3>
               </div>
-              <button type="button" className="modal-close" onClick={closeModal} aria-label="Close registration form">×</button>
+              <button type="button" className="modal-close" onClick={closeModal} aria-label="Close submission form">×</button>
             </div>
 
-            {submitted ? (
+            {submissionState.success ? (
               <div className="success-state">
-                <h4>Thank you for registering.</h4>
-                <p>Your details have been captured locally for the demo experience. We will reach out with the next steps shortly.</p>
+                <h4>Paper submitted successfully.</h4>
+                <p>Your submission ID is <strong>{submissionState.submissionId}</strong>. Please save this reference for future queries.</p>
                 <button type="button" className="btn primary" onClick={closeModal}>Close</button>
               </div>
             ) : (
               <form className="registration-form" onSubmit={handleSubmit}>
                 <div className="modal-grid">
                   <label className="field">
-                    <span>Name</span>
-                    <input name="name" value={formData.name} onChange={handleChange} required placeholder="Your full name" />
+                    <span>Paper title</span>
+                    <input
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      required
+                      placeholder="Enter the paper title"
+                    />
                   </label>
                   <label className="field">
-                    <span>Email</span>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="name@email.com" />
+                    <span>Authors</span>
+                    <input
+                      name="author_names"
+                      value={formData.author_names}
+                      onChange={handleChange}
+                      required
+                      placeholder="Author names separated by commas"
+                    />
                   </label>
                   <label className="field">
-                    <span>Organization</span>
-                    <input name="organization" value={formData.organization} onChange={handleChange} placeholder="Institute / company" />
+                    <span>Author email</span>
+                    <input
+                      type="email"
+                      name="author_email"
+                      value={formData.author_email}
+                      onChange={handleChange}
+                      required
+                      placeholder="contact@email.com"
+                    />
                   </label>
                   <label className="field">
-                    <span>Category</span>
-                    <select name="category" value={formData.category} onChange={handleChange}>
-                      {registrationTiers.map((tier) => (
-                        <option key={tier.category} value={tier.category}>
-                          {tier.category}
+                    <span>Affiliation</span>
+                    <input
+                      name="affiliation"
+                      value={formData.affiliation}
+                      onChange={handleChange}
+                      required
+                      placeholder="College / organisation"
+                    />
+                  </label>
+                </div>
+                <label className="field field-full">
+                  <span>Abstract</span>
+                  <textarea
+                    name="abstract"
+                    value={formData.abstract}
+                    onChange={handleChange}
+                    rows="4"
+                    required
+                    placeholder="Enter the paper abstract"
+                  />
+                </label>
+                <div className="modal-grid">
+                  <label className="field">
+                    <span>Track</span>
+                    <select name="track" value={formData.track} onChange={handleChange}>
+                      {tracks.map((track) => (
+                        <option key={track} value={track}>
+                          {track}
                         </option>
                       ))}
                     </select>
                   </label>
+                  <label className="field">
+                    <span>PDF upload</span>
+                    <input type="file" accept="application/pdf" onChange={handleFileChange} required />
+                  </label>
                 </div>
-                <label className="field field-full">
-                  <span>Notes</span>
-                  <textarea name="notes" value={formData.notes} onChange={handleChange} rows="4" placeholder="Tell us about your participation or any special request." />
-                </label>
+                {submissionState.error && <p className="form-error">{submissionState.error}</p>}
                 <div className="form-actions">
                   <button type="button" className="btn ghost" onClick={closeModal}>Cancel</button>
-                  <button type="submit" className="btn primary">Submit Registration</button>
+                  <button type="submit" className="btn primary" disabled={submissionState.busy}>
+                    {submissionState.busy ? 'Submitting…' : 'Submit Paper'}
+                  </button>
                 </div>
               </form>
             )}
