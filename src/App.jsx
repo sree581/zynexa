@@ -40,7 +40,46 @@ const leadMembers = [
   { role: 'Conference Chair', name: 'Dr. K. E. Reby Roy', detail: 'Academic Director, ISRO–TKMCE Centre of Excellence' },
   { role: 'Organizing Secretary', name: 'Rinshad', detail: 'Student Director, ISRO–TKMCE Centre of Excellence' },
 ]
+const paperGuidelines = [
+  'Full paper length: 8–12 pages, including figures, tables and references',
+  'Page size: A4 (210 × 297 mm) with 25 mm margins on all four sides',
+  'Use a single-column layout throughout the paper',
+  'Abstract: 250–300 words, self-contained, with no citations, figures or equations',
+  'Keywords: 4–6 keywords',
+  'Paper title: preferably concise, specific and under 15 words',
+  'Submit the paper as a single PDF file of 10 MB or less',
+  'File name: PaperID_FirstAuthorSurname.pdf',
+]
 
+const paperStructure = [
+  'Title, authors and affiliations',
+  'Corresponding author details',
+  'Abstract and 4–6 keywords',
+  'Nomenclature, if symbols are used',
+  '1. Introduction',
+  '2. Materials and Methods / Mathematical Formulation',
+  '3. Numerical or Experimental Procedure and Validation',
+  '4. Results and Discussion',
+  '5. Conclusions',
+  'Acknowledgements',
+  'Declaration of Competing Interest',
+  'Author Contributions',
+  'Data Availability',
+  'References',
+  'Appendix (optional)',
+]
+
+const paperChecklist = [
+  'Figures are at least 300 dpi, embedded where first discussed and cited in the text',
+  'Tables are editable text, embedded where first discussed and cited in the text',
+  'Equations are numbered consecutively and SI units are used',
+  'References are numbered in order of first citation and include DOI where available',
+  '25 or more peer-reviewed sources are normally expected, with emphasis on recent work',
+  'Review version is prepared for double-blind peer review',
+  'Similarity is below 15% excluding references',
+  'Any assistive use of AI tools is disclosed in the acknowledgements',
+  'At least one author of every accepted paper must register and present the work',
+]
 const committees = [
   'Technical Program',
   'Publications',
@@ -51,6 +90,94 @@ const committees = [
   'Hospitality & Logistics',
   'Industry & International Relations',
   'Student Coordination',
+]
+const committeeMembers = [
+  {
+    name: 'Registration & Reception',
+    members: [
+      'Afrah Aneez',
+      'Arun Krishnan A.N.',
+      'Muhammed Sinan T.P.',
+      'Bhavya B.',
+      'Gowri D.L.',
+    ],
+  },
+  {
+    name: 'Technical Programme',
+    members: [
+      'George Chrysostom',
+      'Mohamed Sinan',
+      'Athul Bastian',
+      'Midhun S.T.',
+      'Shamil',
+    ],
+  },
+  {
+    name: 'Publicity & Media',
+    members: [
+      'Abhinav',
+      'Bhagath',
+      'Megha',
+      'Aleena',
+      'Isra',
+      'Avanthika',
+      'Abhishek T.M.',
+      'Muhasina S.',
+      'Arjun S.',
+    ],
+  },
+  {
+    name: 'Student Coordination',
+    members: [
+      'Devaprabha D.',
+      'Nidhin Sabu',
+      'Aleesha Prasad',
+      'Safhana',
+      'Prarthana',
+    ],
+  },
+  {
+    name: 'Publications',
+    members: [
+      'Akshara Rajeev K.',
+      'Jobina T. Panicker',
+      'Hridhya S.B.',
+      'Sahal Muhammed',
+      'Shahana Hussain',
+    ],
+  },
+  {
+    name: 'Hospitality & Logistics',
+    members: [
+      'Safa Mariyam',
+      'Ann Tresa Joseph',
+    ],
+  },
+  {
+    name: 'Industry & International Relations',
+    members: [
+      'Daisy Treesa Bastian',
+      'Muflih',
+      'Goutham Krishna B.',
+      'Krishnaraj S.',
+      'Midhu Maria Baiju',
+    ],
+  },
+  {
+    name: 'Website & IT',
+    members: [
+      'Sreenandana A.S.',
+      'Afna V.P.',
+    ],
+  },
+  {
+    name: 'Finance',
+    members: [
+      'Devi Nandana',
+      'Abhijith S. Das',
+      'Jishna Janardhanan',
+    ],
+  },
 ]
 
 const partners = [
@@ -427,6 +554,62 @@ setSubmissionState({ submitted: true, submissionId, success: true, error: '', bu
                 </ul>
                 <p style={{ marginTop: '20px', color: 'var(--muted)', fontSize: '.9rem' }}>Formats: oral presentation, poster. #ZYNEXA2026 · Innovate · Collaborate · Explore</p>
               </div>
+            </div>            <div className="grid-2 reveal" style={{ marginTop: '28px' }}>
+              <div className="card">
+                <h3>Full paper format</h3>
+                <ul className="ticks">
+                  {paperGuidelines.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="card">
+                <h3>Required paper structure</h3>
+                <ul className="ticks">
+                  {paperStructure.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="grid-2 reveal" style={{ marginTop: '24px' }}>
+              <div className="card">
+                <h3>Figures, tables & equations</h3>
+                <ul className="ticks">
+                  <li>Figures must be at least <b>300 dpi</b> and legible in greyscale.</li>
+                  <li>Figures must fit within the <b>160 mm</b> text width.</li>
+                  <li>Axis labels and legends should be at least <b>8 pt</b> after scaling.</li>
+                  <li>Number figures and tables consecutively and refer to each in the text.</li>
+                  <li>Embed each figure and table where it is first discussed rather than grouping them at the end.</li>
+                  <li>Equations should be numbered consecutively and <b>SI units</b> must be used.</li>
+                </ul>
+              </div>
+
+              <div className="card">
+                <h3>Review & originality</h3>
+                <ul className="ticks">
+                  <li>Submissions undergo <b>double-blind peer review</b>.</li>
+                  <li>For review, remove author names, affiliations and acknowledgements.</li>
+                  <li>Similarity above <b>15%</b>, excluding references, leads to desk rejection.</li>
+                  <li>Papers must not be generated wholesale by AI tools.</li>
+                  <li>Any assistive use of AI tools must be disclosed in the acknowledgements.</li>
+                  <li>At least one author of every accepted paper must register and present the work, in person or online.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="card reveal" style={{ marginTop: '24px' }}>
+              <h3>Submission checklist</h3>
+              <ul className="ticks">
+                {paperChecklist.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              <p style={{ marginTop: '20px', color: 'var(--muted)', fontSize: '.9rem' }}>
+                Official full-paper format: <b>8–12 pages · A4 · Single column · 25 mm margins · PDF ≤ 10 MB</b>
+              </p>
             </div>
           </div>
         </section>
@@ -509,7 +692,7 @@ setSubmissionState({ submitted: true, submissionId, success: true, error: '', bu
                 <p className="sec-lead">Founded in 1958 by Janab Thangal Kunju Musaliar, TKMCE is Kerala's first government-aided engineering institution and one of the state's premier autonomous engineering colleges, set on a serene 25-acre green campus at Karicode, Kollam.</p>
                 <div className="stat-strip">
                   <div className="stat"><div className="n">4,100+</div><div className="l">Students</div></div>
-                  <div className="stat"><div className="n">₹ Crores</div><div className="l">National & intl. research funding</div></div>
+                  <div className="stat"><div className="n">₹10 Cr</div><div className="l">National & intl. research funding</div></div>
                   <div className="stat"><div className="n">100+</div><div className="l">Doctoral scholars</div></div>
                   <div className="stat"><div className="n">30+</div><div className="l">National / intl. MoUs</div></div>
                 </div>
@@ -607,6 +790,23 @@ setSubmissionState({ submitted: true, submissionId, success: true, error: '', bu
                 ))}
               </div>
             </div>
+                  <div className="committees reveal" style={{ marginTop: '28px' }}>
+        <div className="ch">// Committee members</div>
+
+        <div className="grid-2">
+          {committeeMembers.map((committee) => (
+            <div className="card" key={committee.name}>
+              <h3>{committee.name}</h3>
+
+              <ul className="ticks">
+                {committee.members.map((member) => (
+                  <li key={member}>{member}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
           </div>
         </section>
 
